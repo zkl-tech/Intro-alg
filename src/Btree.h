@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <iostream>
+#include <stack>
 
 template<typename T1, typename T2>
 struct bNode {
@@ -60,6 +61,55 @@ public:
     // construction
     Btree(int t_) : root(nullptr), t(t_) {};
 
+    // destructor
+    ~Btree() {
+
+        bNode<T1, T2> *tmp_node = root;
+        int *c;
+        int count = 1;
+        int l = 0;
+
+        if (root == nullptr)
+            return;
+
+        while (tmp_node->ptr[0] != nullptr) {
+            ++count;
+            tmp_node = tmp_node->ptr[0];
+        }
+
+        c = new int[count];
+
+        for (int j = 0; j < count; ++j)
+            c[j] = 0;
+
+        while (true) {
+            tmp_node = root;
+
+            while (true) {
+                if (tmp_node->ptr[0] != nullptr) {
+                    tmp_node = tmp_node->ptr[c[l]];
+                    c[l]++;
+                    l++;
+                } else {
+                    for (int j = 0; j < tmp_node->sz; ++j) {
+                        delete tmp_node->ptr[j];
+                        tmp_node->ptr[j] = nullptr;
+                    }
+                    break;
+                }
+            }
+
+            l = 0;
+
+            if (c[0] == tmp_node->sz)
+                break;
+        }
+
+        delete[] c;
+        delete tmp_node;
+
+    }
+
     // search
     Pair<T1, T2> *search(T1 key);
 
@@ -83,15 +133,15 @@ public:
 
 
 // construction
-template <typename T1,typename T2>
-bNode<T1,T2>::bNode(int sz_, bool leaf_) {
+template<typename T1, typename T2>
+bNode<T1, T2>::bNode(int sz_, bool leaf_) {
     this->sz = sz_;
     this->leaf = leaf_;
 }
 
 // construction
-template<typename T1,typename T2>
-bNode<T1,T2>::bNode(const bNode<T1, T2> &node_) {
+template<typename T1, typename T2>
+bNode<T1, T2>::bNode(const bNode<T1, T2> &node_) {
     this->sz = node_.sz;
     this->key = node_.key;
     this->leaf = node_.leaf;
@@ -100,8 +150,8 @@ bNode<T1,T2>::bNode(const bNode<T1, T2> &node_) {
 }
 
 // overload = operator
-template<typename T1,typename T2>
-bNode<T1, T2> & bNode<T1,T2>::operator=(bNode<T1, T2> node_) {
+template<typename T1, typename T2>
+bNode<T1, T2> &bNode<T1, T2>::operator=(bNode<T1, T2> node_) {
     this->leaf = node_.leaf;
     this->key = node_.key;
     this->sz = node_.sz;
@@ -111,14 +161,14 @@ bNode<T1, T2> & bNode<T1,T2>::operator=(bNode<T1, T2> node_) {
 
 // construction
 template<typename T1, typename T2>
-Pair<T1,T2>::Pair(bNode<T1, T2> node_, int index_) {
+Pair<T1, T2>::Pair(bNode<T1, T2> node_, int index_) {
     this->node = node_;
     this->index = index_;
 }
 
 // search
 template<typename T1, typename T2>
-Pair<T1, T2>* Btree<T1,T2>::search(T1 key) {
+Pair<T1, T2> *Btree<T1, T2>::search(T1 key) {
 
     Pair<T1, T2> *pair;
     int j = 0;
@@ -138,7 +188,7 @@ Pair<T1, T2>* Btree<T1,T2>::search(T1 key) {
 
 // split child
 template<typename T1, typename T2>
-void Btree<T1,T2>::split_child(bNode<T1, T2> *x_node, int index) {
+void Btree<T1, T2>::split_child(bNode<T1, T2> *x_node, int index) {
 
     bNode<T1, T2> *z_node;
 
@@ -181,8 +231,8 @@ void Btree<T1,T2>::split_child(bNode<T1, T2> *x_node, int index) {
 }
 
 // nonfull
-template<typename T1,typename T2>
-void Btree<T1,T2>::nonfull(bNode<T1, T2> *x_node, T1 key, T2 data) {
+template<typename T1, typename T2>
+void Btree<T1, T2>::nonfull(bNode<T1, T2> *x_node, T1 key, T2 data) {
 
     int j = x_node->sz;
 
@@ -211,8 +261,8 @@ void Btree<T1,T2>::nonfull(bNode<T1, T2> *x_node, T1 key, T2 data) {
 }
 
 //insert
-template<typename T1,typename T2>
-void Btree<T1,T2>::insert(T1 key, T2 data) {
+template<typename T1, typename T2>
+void Btree<T1, T2>::insert(T1 key, T2 data) {
 
     bNode<T1, T2> *node = this->root;
 
@@ -239,8 +289,8 @@ void Btree<T1,T2>::insert(T1 key, T2 data) {
 }
 
 // print
-template<typename T1,typename T2>
-void Btree<T1,T2>::print() {
+template<typename T1, typename T2>
+void Btree<T1, T2>::print() {
 
     std::cout << "key : ";
     for (int j = 0; j < root->sz; ++j)
