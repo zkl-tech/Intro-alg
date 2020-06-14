@@ -4,7 +4,7 @@
 #define INTRO_ALG_BTREE_H
 
 #include <vector>
-
+#include <iostream>
 
 template<typename T1, typename T2>
 struct bNode {
@@ -21,27 +21,13 @@ struct bNode {
     bNode() : sz(0), leaf(true) {};
 
     // construction
-    bNode(int sz_, bool leaf_) {
-        this->sz = sz_;
-        this->leaf = leaf_;
-    }
+    bNode(int sz_, bool leaf_);
 
     // construction
-    bNode(bNode const &node_) {
-        this->sz = node_.sz;
-        this->key = node_.key;
-        this->leaf = node_.leaf;
-        this->data = node_.data;
-        this->ptr = node_.ptr;
-    }
+    bNode(bNode const &node_);
 
-    bNode &operator=(bNode node_) {
-        this->leaf = node_.leaf;
-        this->key = node_.key;
-        this->sz = node_.sz;
-        this->data = node_.data;
-        this->ptr = node_.ptr;
-    }
+    // overload = operator
+    bNode &operator=(bNode node_);
 
 };
 
@@ -55,10 +41,7 @@ struct Pair {
     Pair() : index(0) {};
 
     // construction
-    Pair(bNode<T1, T2> node_, int index_) {
-        this->node = node_;
-        this->index = index_;
-    }
+    Pair(bNode<T1, T2> node_, int index_);
 
 };
 
@@ -72,80 +55,203 @@ private:
 
 public:
     // default construction
-    Btree() : t(0) {};
+    Btree() : root(nullptr), t(0) {};
+
+    // construction
+    Btree(int t_) : root(nullptr), t(t_) {};
 
     // search
-    Pair<T1, T2> *search(T1 key) {
-
-        Pair<T1, T2> *pair;
-        int j = 0;
-
-        while (j < root->sz && key > root->key[j])
-            j += 1;
-
-        if (j <= root->sz && key == root->key[j]) {
-            pair = new Pair<T1, T2>(root, j);
-            return pair;
-        } else if (root->leaf)
-            return nullptr;
-        else
-            (root->ptr[j])->search(key);
-
-    }
+    Pair<T1, T2> *search(T1 key);
 
 private:
-    void split_child(bNode<T1, T2> x_node, int index) {
 
-        bNode<T1, T2> z_node;
+    // split child
+    void split_child(bNode<T1, T2> *x_node, int index);
 
-        bNode<T1, T2> y_node = x_node.ptr[index];
+    // nonfull
+    void nonfull(bNode<T1, T2> *x_node, T1 key, T2 data);
 
-        z_node.leaf = y_node.leaf;
-        z_node.sz = t - 1;
-        z_node.key.resize(z_node.sz);
-        z_node.data.resize(z_node.sz);
-        z_node.ptr.resize(z_node.sz + 1);
+public:
 
-        for (int j = 0; j < t - 1; ++j) {
-            z_node.key[j] = y_node.key[j + t];
-            z_node.data[j] = y_node.data[j + t];
-        }
-        if (!y_node.leaf) {
-            for (int j = 0; j < t; ++j)
-                z_node.ptr[j] = y_node.ptr[j + t];
-        }
+    // insert
+    void insert(T1 key, T2 data);
 
-        y_node.sz = t - 1;
+    // print
+    void print();
 
-        x_node.ptr.resize(x_node.sz + 1);
-        for (int j = x_node.sz - 1; j > index; --j) {
-            x_node.ptr[j + 1] = x_node.ptr[j];
-        }
-        x_node.ptr[index] = new bNode<T1, T2>(z_node);
-
-        x_node.key.resize(x_node.sz + 1);
-        x_node.data.resize(x_node.sz + 1);
-        for (int j = x_node.sz - 1; j > index; --j) {
-            x_node.key[j + 1] = x_node.key[j];
-            x_node.data[j + 1] = x_node.data[j];
-        }
-        x_node.key[index] = y_node.key[t - 1];
-        x_node.data[index] = y_node.data[t - 1];
-
-        x_node.sz += 1;
-
-    }
-
-    void nonfull(bNode<T1,T2> x_node,T1 key){
-
-        int j=x_node.sz;
-
-        if(x_node.leaf){
-            while(j>=1 && key<x_node.key[j]){
-                x_node
-            }
-        }
-    }
 };
+
+
+// construction
+template <typename T1,typename T2>
+bNode<T1,T2>::bNode(int sz_, bool leaf_) {
+    this->sz = sz_;
+    this->leaf = leaf_;
+}
+
+// construction
+template<typename T1,typename T2>
+bNode<T1,T2>::bNode(const bNode<T1, T2> &node_) {
+    this->sz = node_.sz;
+    this->key = node_.key;
+    this->leaf = node_.leaf;
+    this->data = node_.data;
+    this->ptr = node_.ptr;
+}
+
+// overload = operator
+template<typename T1,typename T2>
+bNode<T1, T2> & bNode<T1,T2>::operator=(bNode<T1, T2> node_) {
+    this->leaf = node_.leaf;
+    this->key = node_.key;
+    this->sz = node_.sz;
+    this->data = node_.data;
+    this->ptr = node_.ptr;
+}
+
+// construction
+template<typename T1, typename T2>
+Pair<T1,T2>::Pair(bNode<T1, T2> node_, int index_) {
+    this->node = node_;
+    this->index = index_;
+}
+
+// search
+template<typename T1, typename T2>
+Pair<T1, T2>* Btree<T1,T2>::search(T1 key) {
+
+    Pair<T1, T2> *pair;
+    int j = 0;
+
+    while (j < root->sz && key > root->key[j])
+        j += 1;
+
+    if (j <= root->sz && key == root->key[j]) {
+        pair = new Pair<T1, T2>(root, j);
+        return pair;
+    } else if (root->leaf)
+        return nullptr;
+    else
+        (root->ptr[j])->search(key);
+
+}
+
+// split child
+template<typename T1, typename T2>
+void Btree<T1,T2>::split_child(bNode<T1, T2> *x_node, int index) {
+
+    bNode<T1, T2> *z_node;
+
+    bNode<T1, T2> *y_node = x_node->ptr[index];
+
+    z_node->leaf = y_node->leaf;
+    z_node->sz = t - 1;
+    z_node->key.resize(z_node->sz);
+    z_node->data.resize(z_node->sz);
+    z_node->ptr.resize(z_node->sz + 1);
+
+    for (int j = 0; j < t - 1; ++j) {
+        z_node->key[j] = y_node->key[j + t];
+        z_node->data[j] = y_node->data[j + t];
+    }
+    if (!y_node->leaf) {
+        for (int j = 0; j < t; ++j)
+            z_node->ptr[j] = y_node->ptr[j + t];
+    }
+
+    y_node->sz = t - 1;
+
+    x_node->ptr.resize(x_node->sz + 1);
+    for (int j = x_node->sz - 1; j > index; --j) {
+        x_node->ptr[j + 1] = x_node->ptr[j];
+    }
+    x_node->ptr[index] = new bNode<T1, T2>(*z_node);
+
+    x_node->key.resize(x_node->sz + 1);
+    x_node->data.resize(x_node->sz + 1);
+    for (int j = x_node->sz - 1; j > index; --j) {
+        x_node->key[j + 1] = x_node->key[j];
+        x_node->data[j + 1] = x_node->data[j];
+    }
+    x_node->key[index] = y_node->key[t - 1];
+    x_node->data[index] = y_node->data[t - 1];
+
+    x_node->sz += 1;
+
+}
+
+// nonfull
+template<typename T1,typename T2>
+void Btree<T1,T2>::nonfull(bNode<T1, T2> *x_node, T1 key, T2 data) {
+
+    int j = x_node->sz;
+
+    if (x_node->leaf) {
+        x_node->key.resize(x_node->sz + 1);
+        while (j >= 0 && key < x_node->key[j]) {
+            x_node->key[j] = x_node->key[j - 1];
+            x_node->data[j] = x_node->data[j - 1];
+            j = j - 1;
+        }
+        x_node->key[j] = key;
+        x_node->data[j] = data;
+        x_node->sz += 1;
+    } else {
+        while (j >= 0 && key < x_node->key[j])
+            j -= 1;
+
+        if ((x_node->ptr[j])->sz == 2 * t - 1) {
+            split_child(x_node, j);
+            if (key > x_node->key[j])
+                ++j;
+        }
+
+        nonfull(x_node->ptr[j], key, data);
+    }
+}
+
+//insert
+template<typename T1,typename T2>
+void Btree<T1,T2>::insert(T1 key, T2 data) {
+
+    bNode<T1, T2> *node = this->root;
+
+    if (root == nullptr) {
+
+        root = new bNode<T1, T2>(1, true);
+        root->key.resize(1);
+        root->key[0] = key;
+        root->data.resize(1);
+        root->data[0] = data;
+        root->ptr.resize(2);
+
+    } else if (root->sz == 2 * t - 1) {
+
+        this->root->leaf = false;
+        this->root->sz = 0;
+        this->root->ptr[0] = new bNode<T1, T2>(*node);
+
+        split_child(this->root, 1);
+        nonfull(this->root, key, data);
+    } else {
+        nonfull(node, key, data);
+    }
+}
+
+// print
+template<typename T1,typename T2>
+void Btree<T1,T2>::print() {
+
+    std::cout << "key : ";
+    for (int j = 0; j < root->sz; ++j)
+        std::cout << root->key[j] << "  ";
+    std::cout << std::endl;
+    std::cout << "data : ";
+    for (int j = 0; j < root->sz; ++j)
+        std::cout << root->data[j] << "  ";
+    std::cout << std::endl;
+
+}
+
 
 #endif //INTRO_ALG_BTREE_H
